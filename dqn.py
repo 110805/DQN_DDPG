@@ -13,6 +13,7 @@ import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 import torch.optim as optim
+import torch.nn.functional as F
 
 
 class ReplayMemory:
@@ -45,8 +46,8 @@ class Net(nn.Module):
 
     def forward(self, x):
         ## TODO ##
-        out =  nn.ReLU(self.fc1(x))
-        out = nn.ReLU(self.fc2(out))
+        out =  F.relu(self.fc1(x))
+        out = F.relu(self.fc2(out))
         out = self.fc3(out)
         return out
 
@@ -94,9 +95,9 @@ class DQN:
             self.batch_size, self.device)
 
         ## TODO ##
-        q_value = self._behavior_net(state).gather(1, action)
+        q_value = self._behavior_net(state).gather(1, action.long())
         with torch.no_grad():
-           q_next = self._target_net(next_state).max(1)[0].detach()
+           q_next = self._target_net(next_state).max(1)[0].view(-1, 1)
            q_target = reward + gamma * q_next * (1 - done)
 
         criterion = nn.MSELoss()
@@ -147,6 +148,7 @@ def train(args, env, agent, writer):
             if total_steps < args.warmup:
                 action = action_space.sample()
             else:
+                state = torch.from_numpy(state).to(args.device)
                 action = agent.select_action(state, epsilon, action_space)
                 epsilon = max(epsilon * args.eps_decay, args.eps_min)
             # execute action
@@ -186,6 +188,7 @@ def test(args, env, agent, writer):
         ## TODO ##
         for t in itertools.count(start=1):
             # select action
+            state = torch.from_numpy(state).to(args.device)
             action = agent.select_action(state, epsilon, action_space)
             # execute action
             next_state, reward, done, _ = env.step(action)
