@@ -196,7 +196,7 @@ def test(args, env, agent, writer):
             state = next_state
             total_reward += reward
             if done:
-                writer.add_scalar('Test/Episode Reward', total_reward, n_episode)
+                #writer.add_scalar('Test/Episode Reward', total_reward, n_episode)
                 rewards.append(total_reward)
                 break
 
@@ -211,7 +211,7 @@ def main():
     parser.add_argument('--logdir', default='log/dqn')
     # train
     parser.add_argument('--warmup', default=10000, type=int)
-    parser.add_argument('--episode', default=1200, type=int)
+    parser.add_argument('--episode', default=1000, type=int)
     parser.add_argument('--capacity', default=10000, type=int)
     parser.add_argument('--batch_size', default=128, type=int)
     parser.add_argument('--lr', default=.0005, type=float)

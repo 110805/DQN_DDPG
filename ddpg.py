@@ -54,12 +54,12 @@ class ActorNet(nn.Module):
         self.fc1 = nn.Linear(state_dim, h1)
         self.fc2 = nn.Linear(h1, h2)
         self.fc3 = nn.Linear(h2, action_dim)
-
+        self.tanh = nn.Tanh()
     def forward(self, x):
         ## TODO ##
         out = F.relu(self.fc1(x))
         out = F.relu(self.fc2(out))
-        out = F.tanh(self.fc3(out))
+        out = self.tanh(self.fc3(out))
         return out
 
 class CriticNet(nn.Module):
@@ -73,7 +73,7 @@ class CriticNet(nn.Module):
         self.critic = nn.Sequential(
             nn.Linear(h1, h2),
             nn.ReLU(),
-            nn.Linear(h2, 1), # return the action value, so the output dimension is 1 not action_dim
+            nn.Linear(h2, action_dim),
         )
 
     def forward(self, x, action):
@@ -115,7 +115,7 @@ class DDPG:
             else:
                 act = self._actor_net(state)
 
-        return act.numpy().cpu()
+        return act.cpu().numpy()
 
     def append(self, state, action, reward, next_state, done):
         self._memory.append(state, action, [reward / 100], next_state,
@@ -146,7 +146,7 @@ class DDPG:
             a_next = target_actor_net(next_state)
             q_next = target_critic_net(next_state, a_next)
             q_target = reward + gamma*q_next
-
+        
         criterion = nn.MSELoss()
         critic_loss = criterion(q_value, q_target)
 
